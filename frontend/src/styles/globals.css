@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-notion-bg text-notion-text;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-notion-bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-notion-border rounded-md;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-notion-border-dark;
+  }
+
+  /* Selection colors */
+  ::selection {
+    @apply bg-blue-100 text-blue-900;
+  }
+}
+
+@layer components {
+  /* Block styles */
+  .block-content {
+    @apply outline-none;
+  }
+
+  .block-content:empty:before {
+    content: attr(data-placeholder);
+    @apply text-notion-text-tertiary pointer-events-none;
+  }
+
+  /* Page styles */
+  .page-container {
+    @apply max-w-4xl mx-auto px-page py-12;
+  }
+
+  /* Transition utilities */
+  .transition-hover {
+    @apply transition-all duration-100 ease-in-out;
+  }
+
+  /* Toast animations */
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+}

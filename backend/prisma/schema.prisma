@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// M1: Enhanced User model
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  createdPages  Page[]  @relation("PageCreator")
+  createdBlocks Block[] @relation("BlockCreator")
+  editedBlocks  Block[] @relation("BlockEditor")
+  
+  @@map("users")
+}
+
+// M1: Enhanced Page model with soft delete
+model Page {
+  id           String    @id @default(uuid())
+  parentPageId String?   @map("parent_page_id")
+  title        String
+  icon         String?
+  coverImage   String?   @map("cover_image")
+  isDatabase   Boolean   @default(false) @map("is_database")
+  sortIndex    Int       @default(0) @map("sort_index")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  createdById  String    @default("default-user-id") @map("created_by_id")
+  deletedAt    DateTime? @map("deleted_at")
+  
+  // Relations
+  parentPage   Page?     @relation("PageHierarchy", fields: [parentPageId], references: [id], onDelete: Cascade)
+  childPages   Page[]    @relation("PageHierarchy")
+  creator      User      @relation("PageCreator", fields: [createdById], references: [id])
+  blocks       Block[]
+  
+  @@index([parentPageId])
+  @@index([deletedAt])
+  @@index([parentPageId, sortIndex])
+  @@map("pages")
+}
+
+// M1: Enhanced Block model with soft delete and JSON properties
+model Block {
+  id              String    @id @default(uuid())
+  pageId          String    @map("page_id")
+  parentBlockId   String?   @map("parent_block_id")
+  type            String    // paragraph, heading_1, etc.
+  properties      Json      // JSON object for flexible properties
+  sortIndex       Int       @default(0) @map("sort_index")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdById     String    @default("default-user-id") @map("created_by_id")
+  lastEditedById  String    @default("default-user-id") @map("last_edited_by_id")
+  deletedAt       DateTime? @map("deleted_at")
+  
+  // Relations
+  page            Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parentBlock     Block?    @relation("BlockHierarchy", fields: [parentBlockId], references: [id], onDelete: Cascade)
+  childBlocks     Block[]   @relation("BlockHierarchy")
+  creator         User      @relation("BlockCreator", fields: [createdById], references: [id])
+  lastEditor      User      @relation("BlockEditor", fields: [lastEditedById], references: [id])
+  
+  @@index([pageId])
+  @@index([parentBlockId])
+  @@index([deletedAt])
+  @@index([pageId, parentBlockId, sortIndex])
+  @@map("blocks")
+}
